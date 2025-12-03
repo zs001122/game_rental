@@ -1,14 +1,11 @@
 {
   "version": 2,
-  "buildCommand": "pip install -r requirements.txt",
   "env": {
-    "FLASK_ENV": "production",
-    "PYTHON_VERSION": "3.9"
+    "FLASK_ENV": "production"
   },
   "functions": {
     "api/index.py": {
-      "runtime": "python3.9",
-      "maxDuration": 60
+      "runtime": "python3.12"
     }
   },
   "routes": [
