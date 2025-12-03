@@ -1,6 +1,8 @@
 """
 Flask应用主文件
 """
+import os
+from pathlib import Path
 from flask import Flask, render_template
 from flask_cors import CORS
 from backend.config import Config
@@ -8,9 +10,15 @@ from backend.models import db
 
 def create_app():
     """创建Flask应用"""
+    # 获取正确的路径
+    base_path = Path(__file__).parent.parent
+    template_path = os.path.join(base_path, 'frontend', 'templates')
+    static_path = os.path.join(base_path, 'frontend', 'static')
+    
     app = Flask(__name__, 
-                template_folder='../frontend/templates',
-                static_folder='../frontend/static')
+                template_folder=template_path,
+                static_folder=static_path,
+                static_url_path='/static')
     
     # 加载配置
     app.config.from_object(Config)

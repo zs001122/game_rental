@@ -10,15 +10,43 @@ try:
     sys.path.insert(0, str(Path(__file__).parent.parent))
     
     from backend.app import create_app
+    from backend.models import db, User
     
     # Create Flask app
     app = create_app()
     
     # Initialize database
     with app.app_context():
-        from backend.models import db
-        # Create tables if they don't exist
+        # Create tables
         db.create_all()
+        
+        # Initialize with default test user if needed
+        if User.query.count() == 0:
+            # Create a test admin user
+            admin_user = User(
+                username='admin',
+                email='admin@example.com',
+                phone='13800000000',
+                balance=10000.00,
+                is_admin=True
+            )
+            admin_user.set_password('admin123')
+            
+            # Create some test users
+            test_user = User(
+                username='user001',
+                email='user001@example.com',
+                phone='13800000001',
+                balance=500.00,
+                is_admin=False
+            )
+            test_user.set_password('123456')
+            
+            db.session.add(admin_user)
+            db.session.add(test_user)
+            db.session.commit()
+            
+            print("Default users initialized")
         
 except Exception as e:
     # Log initialization errors
