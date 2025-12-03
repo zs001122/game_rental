@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>出币活动 - 游戏账号租赁平台</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .lottery-container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .lottery-info {
+            background: linear-gradient(135deg, #1e90ff, #00bfff);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .lottery-wheel {
+            width: 400px;
+            height: 400px;
+            margin: 30px auto;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                #FFD700 0deg 60deg,
+                #1e90ff 60deg 120deg,
+                #FF6B9D 120deg 180deg,
+                #00bfff 180deg 240deg,
+                #32CD32 240deg 300deg,
+                #FF8C00 300deg 360deg
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 0 30px rgba(30, 144, 255, 0.5), inset 0 0 20px rgba(0,0,0,0.2);
+            border: 5px solid #ffd700;
+            animation: spin 4s linear infinite;
+            cursor: pointer;
+        }
+        
+        .lottery-wheel.spinning {
+            animation: spin 0.1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .lottery-wheel::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 20px solid #ffd700;
+            z-index: 10;
+        }
+        
+        .lottery-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.5);
+            transition: all 0.3s;
+            position: relative;
+            z-index: 5;
+        }
+        
+        .lottery-button:hover:not(:disabled) {
+            transform: scale(1.15);
+            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.8);
+        }
+        
+        .lottery-button:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+        
+        .lottery-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .prize-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .prize-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #ffd700;
+        }
+        
+        .prize-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .prize-amount {
+            font-size: 20px;
+            color: #1e90ff;
+            font-weight: bold;
+        }
+        
+        #result {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffd700;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .result-success {
+            animation: pop 0.5s ease-out;
+        }
+        
+        @keyframes pop {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="navbar-brand">游戏账号租赁平台</a>
+            <ul class="navbar-menu">
+                <li><a href="/rental">账号租赁</a></li>
+                <li><a href="/publish">发布账号</a></li>
+                <li><a href="/activity">出币活动</a></li>
+                <li><a href="/news">经济学日报</a></li>
+                <li><a href="/profile">个人中心</a></li>
+            </ul>
+            <div class="navbar-user"></div>
+        </div>
+    </nav>
+    
+    <!-- 主内容 -->
+    <div class="container">
+        <div class="card lottery-container">
+            <h2 class="card-title">幸运大转盘</h2>
+            <div class="lottery-info" id="lotteryInfo">📢 每天可以免费抽奖一次</div>
+            
+            <div class="lottery-wheel" id="lotteryWheel">
+                <button class="lottery-button" id="lotteryBtn" onclick="startLottery()">开始<br>抽奖</button>
+            </div>
+            
+            <div id="result"></div>
+            
+            <div class="prize-list">
+                <div class="prize-item">
+                    <div class="prize-name">一等奖</div>
+                    <div class="prize-amount">¥100</div>
+                </div>
+                <div class="prize-item">
+                    <div class="prize-name">二等奖</div>
+                    <div class="prize-amount">¥50</div>
+                </div>
+                <div class="prize-item">
+                    <div class="prize-name">三等奖</div>
+                    <div class="prize-amount">¥20</div>
+                </div>
+                <div class="prize-item">
+                    <div class="prize-name">四等奖</div>
+                    <div class="prize-amount">¥10</div>
+                </div>
+                <div class="prize-item">
+                    <div class="prize-name">五等奖</div>
+                    <div class="prize-amount">¥5</div>
+                </div>
+                <div class="prize-item">
+                    <div class="prize-name">谢谢参与</div>
+                    <div class="prize-amount">¥0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/js/common.js"></script>
+    <script>
+        checkLogin();
+        
+        const prizes = [
+            { name: '一等奖', amount: 100, probability: 0.01 },
+            { name: '二等奖', amount: 50, probability: 0.05 },
+            { name: '三等奖', amount: 20, probability: 0.1 },
+            { name: '四等奖', amount: 10, probability: 0.2 },
+            { name: '五等奖', amount: 5, probability: 0.3 },
+            { name: '谢谢参与', amount: 0, probability: 0.34 }
+        ];
+        
+        let isSpinning = false;
+        let freeCountToday = 1; // 默认每天一次
+        
+        // 更新抽奖信息提示
+        function updateLotteryInfo() {
+            const lotteryInfo = document.getElementById('lotteryInfo');
+            const btn = document.getElementById('lotteryBtn');
+            
+            if (freeCountToday < 1) {
+                lotteryInfo.innerHTML = '🌟 今天免费抽奖次数已用正 | 下次抽奖需贫乏而动浅💰';
+                btn.innerHTML = '抽奖需贫<br>1元';
+            } else {
+                lotteryInfo.innerHTML = '🌟 今天还有 <strong>' + freeCountToday + '</strong> 次免费抽奖';
+                btn.innerHTML = '开始<br>抽奖';
+            }
+        }
+        
+        async function startLottery() {
+            if (isSpinning) return;
+            
+            const button = document.getElementById('lotteryBtn');
+            const result = document.getElementById('result');
+            const wheel = document.getElementById('lotteryWheel');
+            
+            // 检查是否需要扣费
+            if (freeCountToday < 1) {
+                // 检查余额
+                try {
+                    const userRes = await apiRequest('/users/balance');
+                    if (userRes.balance < 1) {
+                        showMessage('余额不足，无法抽奖，请先充值', 'error');
+                        return;
+                    }
+                } catch (error) {
+                    showMessage('余额检查失败', 'error');
+                    return;
+                }
+            }
+            
+            isSpinning = true;
+            button.disabled = true;
+            
+            // 转盘开始旋转不断旋转
+            wheel.classList.add('spinning');
+            result.textContent = '抽奖中，超级幸运次数流转中🔄';
+            
+            // 模拟抽奖动画（旋转指底）
+            const spinDuration = 3000; // 3秒旋转
+            const totalRotations = 10; // 10圈
+            const finalRotation = Math.random() * 360; // 需要的最终角度
+            
+            wheel.style.transition = `transform ${spinDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
+            wheel.style.transform = `rotate(${totalRotations * 360 + finalRotation}deg)`;
+            
+            setTimeout(async () => {
+                wheel.classList.remove('spinning');
+                
+                // 随机抽奖
+                const random = Math.random();
+                let cumulative = 0;
+                let prize = prizes[prizes.length - 1];
+                
+                for (let p of prizes) {
+                    cumulative += p.probability;
+                    if (random <= cumulative) {
+                        prize = p;
+                        break;
+                    }
+                }
+                
+                // 显示结果
+                if (prize.amount > 0) {
+                    result.innerHTML = `<div class="result-success">🎉 恋喜您抽中${prize.name}！<br><span style="font-size: 32px; color: #1e90ff; display: block; margin-top: 10px;">+¥${prize.amount}</span></div>`;
+                } else {
+                    result.innerHTML = `<div class="result-success">😂 多遭憾，下次有你！</div>`;
+                }
+                
+                // 处理奖励
+                if (prize.amount > 0) {
+                    try {
+                        // 检查是否需要扣费（第一次儿上免费）
+                        if (freeCountToday < 1) {
+                            // 从余额扣除1元
+                            await apiRequest('/users/withdraw', {
+                                method: 'POST',
+                                body: JSON.stringify({ amount: 1 })
+                            });
+                        }
+                        
+                        // 发送奖励
+                        await apiRequest('/users/recharge', {
+                            method: 'POST',
+                            body: JSON.stringify({ amount: prize.amount })
+                        });
+                        
+                        if (freeCountToday >= 1) {
+                            freeCountToday--;
+                            showMessage(`恋喜您获得¥${prize.amount}，已自动充值到账户💰`, 'success');
+                        } else {
+                            showMessage(`恋喜您获得¥${prize.amount}，已扣除抽奖费用¥1元💰`, 'success');
+                        }
+                        
+                        updateLotteryInfo();
+                        await updateNavbar();
+                    } catch (error) {
+                        showMessage('奖励发放失败: ' + error.message, 'error');
+                    }
+                } else {
+                    if (freeCountToday >= 1) {
+                        freeCountToday--;
+                        updateLotteryInfo();
+                    }
+                    showMessage('下次继续加油，希望你还是个幸乐爱好者！', 'info');
+                }
+                
+                isSpinning = false;
+                button.disabled = false;
+                wheel.style.transition = 'none';
+            }, spinDuration);
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', updateLotteryInfo);
+        updateLotteryInfo();
+    </script>
+</body>
+</html>

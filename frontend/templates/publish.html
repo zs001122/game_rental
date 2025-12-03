@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发布账号 - 游戏账号租赁平台</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="navbar-brand">游戏账号租赁平台</a>
+            <ul class="navbar-menu">
+                <li><a href="/rental">账号租赁</a></li>
+                <li><a href="/publish">发布账号</a></li>
+                <li><a href="/activity">出币活动</a></li>
+                <li><a href="/news">经济学日报</a></li>
+                <li><a href="/profile">个人中心</a></li>
+            </ul>
+            <div class="navbar-user"></div>
+        </div>
+    </nav>
+    
+    <!-- 主内容 -->
+    <div class="container">
+        <div class="card" style="max-width: 800px; margin: 0 auto;">
+            <h2 class="card-title">发布账号</h2>
+            
+            <form id="publishForm">
+                <div class="form-group">
+                    <label class="form-label">账号编号 *</label>
+                    <input type="text" class="form-control" id="accountNumber" required placeholder="请输入账号编号">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">收号时间</label>
+                        <input type="text" class="form-control" id="collectionTime" placeholder="例如：12月1日">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">上号时间</label>
+                        <input type="text" class="form-control" id="loginTime" placeholder="例如：8:00-22:00">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">常用地</label>
+                        <input type="text" class="form-control" id="commonLocation" placeholder="例如：上海">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">区服</label>
+                        <input type="text" class="form-control" id="serverRegion" placeholder="例如：华东一区">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">登录方式</label>
+                        <select class="form-control" id="loginMethod">
+                            <option value="">请选择</option>
+                            <option value="账密登录">账密登录</option>
+                            <option value="扫码登录">扫码登录</option>
+                            <option value="账密/扫码">账密/扫码</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">人脸认证</label>
+                        <select class="form-control" id="faceVerification">
+                            <option value="">请选择</option>
+                            <option value="已认证">已认证</option>
+                            <option value="未认证">未认证</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">段位</label>
+                        <input type="text" class="form-control" id="rank" placeholder="例如：钻石">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">等级</label>
+                        <input type="number" class="form-control" id="level" placeholder="例如：50">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">总资产(m)</label>
+                        <input type="number" step="0.01" class="form-control" id="totalAssets" placeholder="例如：200.50">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">纯币资产(m) *</label>
+                        <input type="number" step="0.01" class="form-control" id="pureCoinAssets" required placeholder="例如：150.00">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">体力等级</label>
+                        <input type="number" class="form-control" id="staminaLevel" placeholder="例如：30">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">保险箱格数 *</label>
+                        <select class="form-control" id="safeBoxSlots" required>
+                            <option value="">请选择</option>
+                            <option value="4">4格</option>
+                            <option value="6">6格</option>
+                            <option value="9">9格</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">AW子弹</label>
+                    <input type="number" class="form-control" id="awBullets" placeholder="例如：500">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">持有刀皮（可多选）</label>
+                    <select class="form-control" id="knifeSkins" multiple style="height: 120px;">
+                        <option value="北极星">北极星</option>
+                        <option value="黑海">黑海</option>
+                        <option value="赤霄怜悯">赤霄怜悯</option>
+                        <option value="影锋">影锋</option>
+                        <option value="信条">信条</option>
+                    </select>
+                    <small style="color: #999;">按住Ctrl键可多选</small>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">价格 *</label>
+                        <input type="number" step="0.01" class="form-control" id="price" required placeholder="租金价格">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">押金 *</label>
+                        <input type="number" step="0.01" class="form-control" id="deposit" required placeholder="押金金额">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">备注</label>
+                    <textarea class="form-control" id="remarks" rows="3" placeholder="其他说明信息"></textarea>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button type="button" class="btn btn-secondary" onclick="window.history.back()">取消</button>
+                    <button type="submit" class="btn btn-primary" style="margin-left: 15px;">发布</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="/static/js/common.js"></script>
+    <script>
+        // 检查登录状态
+        checkLogin();
+        
+        document.getElementById('publishForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // 获取刀皮选择
+            const knifeSkinSelect = document.getElementById('knifeSkins');
+            const knifeSkins = Array.from(knifeSkinSelect.selectedOptions).map(opt => opt.value);
+            
+            const formData = {
+                account_number: document.getElementById('accountNumber').value,
+                collection_time: document.getElementById('collectionTime').value || null,
+                login_time: document.getElementById('loginTime').value || null,
+                common_location: document.getElementById('commonLocation').value || null,
+                server_region: document.getElementById('serverRegion').value || null,
+                login_method: document.getElementById('loginMethod').value || null,
+                face_verification: document.getElementById('faceVerification').value || null,
+                rank: document.getElementById('rank').value || null,
+                total_assets: parseFloat(document.getElementById('totalAssets').value) || null,
+                pure_coin_assets: parseFloat(document.getElementById('pureCoinAssets').value),
+                level: parseInt(document.getElementById('level').value) || null,
+                stamina_level: parseInt(document.getElementById('staminaLevel').value) || null,
+                safe_box_slots: parseInt(document.getElementById('safeBoxSlots').value),
+                aw_bullets: parseInt(document.getElementById('awBullets').value) || null,
+                knife_skins: knifeSkins,
+                price: parseFloat(document.getElementById('price').value),
+                deposit: parseFloat(document.getElementById('deposit').value),
+                remarks: document.getElementById('remarks').value || null
+            };
+            
+            try {
+                const data = await apiRequest('/accounts/', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+                
+                if (data.success) {
+                    alert('发布成功！');
+                    window.location.href = '/profile';
+                }
+            } catch (error) {
+                alert('发布失败: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

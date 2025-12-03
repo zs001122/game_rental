@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - 游戏账号租赁平台</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="navbar-brand">游戏账号租赁平台</a>
+            <ul class="navbar-menu">
+                <li><a href="/rental">账号租赁</a></li>
+                <li><a href="/publish">发布账号</a></li>
+                <li><a href="/activity">出币活动</a></li>
+                <li><a href="/news">经济学日报</a></li>
+                <li><a href="/profile">个人中心</a></li>
+            </ul>
+            <div class="navbar-user"></div>
+        </div>
+    </nav>
+    
+    <!-- 主内容 -->
+    <div class="container">
+        <!-- 用户信息卡片 -->
+        <div class="card">
+            <h2 class="card-title">个人信息</h2>
+            <div id="userInfo" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+        
+        <!-- 钱包管理 -->
+        <div class="card">
+            <h2 class="card-title">钱包管理</h2>
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <div style="flex: 1;">
+                    <div style="font-size: 14px; color: #666; margin-bottom: 5px;">当前余额</div>
+                    <div id="currentBalance" style="font-size: 32px; font-weight: bold; color: #667eea;">¥0.00</div>
+                </div>
+                <div>
+                    <button class="btn btn-success" onclick="showRechargeDialog()">充值</button>
+                    <button class="btn btn-secondary" onclick="showWithdrawDialog()" style="margin-left: 10px;">提现</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 我的账号 -->
+        <div class="card">
+            <h2 class="card-title">我发布的账号</h2>
+            <div id="myAccounts">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+        
+        <!-- 我的订单 -->
+        <div class="card">
+            <h2 class="card-title">我的订单</h2>
+            <div style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadOrders('all')">全部订单</button>
+                <button class="btn btn-secondary" onclick="loadOrders('rented')" style="margin-left: 10px;">我租赁的</button>
+                <button class="btn btn-secondary" onclick="loadOrders('owned')" style="margin-left: 10px;">我出租的</button>
+            </div>
+            <div id="myOrders">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 充值对话框 -->
+    <div id="rechargeDialog" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 400px; margin: 0;">
+            <h3 class="card-title">充值</h3>
+            <div class="form-group">
+                <label class="form-label">充值金额</label>
+                <input type="number" class="form-control" id="rechargeAmount" placeholder="请输入充值金额">
+            </div>
+            <div style="text-align: right;">
+                <button class="btn btn-secondary" onclick="hideRechargeDialog()">取消</button>
+                <button class="btn btn-success" onclick="doRecharge()" style="margin-left: 10px;">确认充值</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 提现对话框 -->
+    <div id="withdrawDialog" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 400px; margin: 0;">
+            <h3 class="card-title">提现</h3>
+            <div class="form-group">
+                <label class="form-label">提现金额</label>
+                <input type="number" class="form-control" id="withdrawAmount" placeholder="请输入提现金额">
+            </div>
+            <div style="text-align: right;">
+                <button class="btn btn-secondary" onclick="hideWithdrawDialog()">取消</button>
+                <button class="btn btn-primary" onclick="doWithdraw()" style="margin-left: 10px;">确认提现</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/js/common.js"></script>
+    <script>
+        let currentUser = null;
+        
+        async function init() {
+            currentUser = await checkLogin();
+            if (currentUser) {
+                loadUserInfo();
+                loadMyAccounts();
+                loadOrders('all');
+            }
+        }
+        
+        // 加载用户信息
+        async function loadUserInfo() {
+            const userInfo = document.getElementById('userInfo');
+            const currentBalance = document.getElementById('currentBalance');
+            
+            userInfo.innerHTML = `
+                <div>
+                    <div style="color: #666; font-size: 14px;">用户名</div>
+                    <div style="font-weight: bold; margin-top: 5px;">${currentUser.username}</div>
+                </div>
+                <div>
+                    <div style="color: #666; font-size: 14px;">邮箱</div>
+                    <div style="font-weight: bold; margin-top: 5px;">${currentUser.email || '未设置'}</div>
+                </div>
+                <div>
+                    <div style="color: #666; font-size: 14px;">手机号</div>
+                    <div style="font-weight: bold; margin-top: 5px;">${currentUser.phone || '未设置'}</div>
+                </div>
+                <div>
+                    <div style="color: #666; font-size: 14px;">注册时间</div>
+                    <div style="font-weight: bold; margin-top: 5px;">${formatDate(currentUser.created_at)}</div>
+                </div>
+            `;
+            
+            currentBalance.textContent = '¥' + formatMoney(currentUser.balance);
+        }
+        
+        // 加载我的账号
+        async function loadMyAccounts() {
+            const myAccounts = document.getElementById('myAccounts');
+            myAccounts.innerHTML = '<div class="loading">加载中...</div>';
+            
+            try {
+                const data = await apiRequest('/accounts/');
+                const userAccounts = data.accounts.filter(acc => acc.user_id === currentUser.id);
+                
+                if (userAccounts.length === 0) {
+                    myAccounts.innerHTML = '<div class="empty-state"><p>您还没有发布任何账号</p></div>';
+                    return;
+                }
+                
+                myAccounts.innerHTML = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>账号编号</th>
+                                <th>区服</th>
+                                <th>等级</th>
+                                <th>保险箱</th>
+                                <th>价格</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${userAccounts.map(acc => `
+                                <tr>
+                                    <td>${acc.account_number}</td>
+                                    <td>${acc.server_region || '-'}</td>
+                                    <td>${acc.level || '-'}</td>
+                                    <td>${acc.safe_box_slots}格</td>
+                                    <td>¥${formatMoney(acc.price)}</td>
+                                    <td>${getStatusText(acc.status)}</td>
+                                    <td>
+                                        <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="deleteAccount(${acc.id})">删除</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                myAccounts.innerHTML = '<div class="empty-state"><p>加载失败: ' + error.message + '</p></div>';
+            }
+        }
+        
+        // 加载订单
+        async function loadOrders(type = 'all') {
+            const myOrders = document.getElementById('myOrders');
+            myOrders.innerHTML = '<div class="loading">加载中...</div>';
+            
+            try {
+                const data = await apiRequest('/orders/?type=' + type);
+                
+                if (data.orders.length === 0) {
+                    myOrders.innerHTML = '<div class="empty-state"><p>暂无订单</p></div>';
+                    return;
+                }
+                
+                myOrders.innerHTML = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>订单号</th>
+                                <th>账号</th>
+                                <th>租金</th>
+                                <th>押金</th>
+                                <th>总金额</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.orders.map(order => `
+                                <tr>
+                                    <td>${order.order_number}</td>
+                                    <td>${order.account ? order.account.account_number : '-'}</td>
+                                    <td>¥${formatMoney(order.rental_amount)}</td>
+                                    <td>¥${formatMoney(order.deposit_amount)}</td>
+                                    <td>¥${formatMoney(order.total_amount)}</td>
+                                    <td>${getStatusText(order.status)}</td>
+                                    <td>${formatDate(order.created_at)}</td>
+                                    <td>
+                                        ${order.status === 'pending' && order.renter_id === currentUser.id ? 
+                                            `<button class="btn btn-success" style="padding: 5px 10px; font-size: 12px;" onclick="payOrder(${order.id})">支付</button>` : ''}
+                                        ${order.status === 'paid' ? 
+                                            `<button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;" onclick="completeOrder(${order.id})">完成</button>` : ''}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                myOrders.innerHTML = '<div class="empty-state"><p>加载失败: ' + error.message + '</p></div>';
+            }
+        }
+        
+        // 删除账号
+        async function deleteAccount(accountId) {
+            if (!confirm('确认删除此账号吗？')) return;
+            
+            try {
+                await apiRequest(`/accounts/${accountId}`, { method: 'DELETE' });
+                showMessage('删除成功', 'success');
+                loadMyAccounts();
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        }
+        
+        // 支付订单
+        async function payOrder(orderId) {
+            if (!confirm('确认支付此订单吗？')) return;
+            
+            try {
+                await apiRequest(`/orders/${orderId}/pay`, { method: 'POST' });
+                showMessage('支付成功', 'success');
+                await updateNavbar();
+                currentUser = await getCurrentUser();
+                loadUserInfo();
+                loadOrders('all');
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        }
+        
+        // 完成订单
+        async function completeOrder(orderId) {
+            if (!confirm('确认完成此订单吗？押金将退还一半。')) return;
+            
+            try {
+                await apiRequest(`/orders/${orderId}/complete`, { method: 'POST' });
+                showMessage('订单已完成', 'success');
+                await updateNavbar();
+                currentUser = await getCurrentUser();
+                loadUserInfo();
+                loadOrders('all');
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        }
+        
+        // 显示充值对话框
+        function showRechargeDialog() {
+            document.getElementById('rechargeDialog').style.display = 'flex';
+        }
+        
+        // 隐藏充值对话框
+        function hideRechargeDialog() {
+            document.getElementById('rechargeDialog').style.display = 'none';
+            document.getElementById('rechargeAmount').value = '';
+        }
+        
+        // 执行充值
+        async function doRecharge() {
+            const amount = parseFloat(document.getElementById('rechargeAmount').value);
+            if (!amount || amount <= 0) {
+                alert('请输入正确的充值金额');
+                return;
+            }
+            
+            try {
+                await apiRequest('/users/recharge', {
+                    method: 'POST',
+                    body: JSON.stringify({ amount })
+                });
+                showMessage('充值成功', 'success');
+                hideRechargeDialog();
+                await updateNavbar();
+                currentUser = await getCurrentUser();
+                loadUserInfo();
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        }
+        
+        // 显示提现对话框
+        function showWithdrawDialog() {
+            document.getElementById('withdrawDialog').style.display = 'flex';
+        }
+        
+        // 隐藏提现对话框
+        function hideWithdrawDialog() {
+            document.getElementById('withdrawDialog').style.display = 'none';
+            document.getElementById('withdrawAmount').value = '';
+        }
+        
+        // 执行提现
+        async function doWithdraw() {
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            if (!amount || amount <= 0) {
+                alert('请输入正确的提现金额');
+                return;
+            }
+            
+            try {
+                await apiRequest('/users/withdraw', {
+                    method: 'POST',
+                    body: JSON.stringify({ amount })
+                });
+                showMessage('提现申请已提交', 'success');
+                hideWithdrawDialog();
+                await updateNavbar();
+                currentUser = await getCurrentUser();
+                loadUserInfo();
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        }
+        
+        init();
+    </script>
+</body>
+</html>

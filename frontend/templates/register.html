@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 游戏账号租赁平台</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .register-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .register-card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 450px;
+        }
+        
+        .register-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .register-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .register-subtitle {
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .register-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        
+        .register-footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .register-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-card">
+            <div class="register-header">
+                <h1 class="register-title">注册新账号</h1>
+                <p class="register-subtitle">加入我们，开始租赁之旅</p>
+            </div>
+            
+            <form id="registerForm">
+                <div class="form-group">
+                    <label class="form-label">用户名 *</label>
+                    <input type="text" class="form-control" id="username" required placeholder="请输入用户名">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">密码 *</label>
+                    <input type="password" class="form-control" id="password" required placeholder="请输入密码">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">确认密码 *</label>
+                    <input type="password" class="form-control" id="confirmPassword" required placeholder="请再次输入密码">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">邮箱</label>
+                    <input type="email" class="form-control" id="email" placeholder="请输入邮箱（可选）">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">手机号</label>
+                    <input type="tel" class="form-control" id="phone" placeholder="请输入手机号（可选）">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">注册</button>
+            </form>
+            
+            <div class="register-footer">
+                已有账号？<a href="/login">立即登录</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            
+            if (password !== confirmPassword) {
+                alert('两次输入的密码不一致');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password, email, phone })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('注册成功！请登录');
+                    window.location.href = '/login';
+                } else {
+                    alert(data.message || '注册失败');
+                }
+            } catch (error) {
+                alert('注册失败: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<<<<<<< HEAD
+# 游戏账号租赁平台
+
+一个功能完整的PC端游戏账号租赁系统，支持账号发布、租赁、搜索筛选、在线交易、资金管理等核心功能。
+
+## 技术栈
+
+- **前端**: HTML, CSS, JavaScript
+- **后端**: Python Flask
+- **数据库**: SQLite
+- **其他**: Flask-SQLAlchemy, Flask-CORS
+
+## 项目结构
+
+```
+game_rental_platform/
+├── backend/                    # 后端代码
+│   ├── models/                # 数据库模型
+│   │   ├── __init__.py
+│   │   ├── user.py           # 用户模型
+│   │   ├── account.py        # 账号模型
+│   │   └── order.py          # 订单模型
+│   ├── routes/                # API路由
+│   │   ├── auth.py           # 认证路由
+│   │   ├── account.py        # 账号管理路由
+│   │   ├── order.py          # 订单管理路由
+│   │   └── user.py           # 用户管理路由
+│   ├── config.py              # 配置文件
+│   └── app.py                 # Flask应用主文件
+├── frontend/                   # 前端代码
+│   ├── static/                # 静态资源
+│   │   ├── css/
+│   │   │   └── style.css     # 样式文件
+│   │   └── js/
+│   │       └── common.js     # 通用JavaScript
+│   └── templates/             # HTML模板
+│       ├── index.html         # 首页
+│       ├── login.html         # 登录页
+│       ├── register.html      # 注册页
+│       ├── rental.html        # 租赁页
+│       ├── publish.html       # 发布页
+│       ├── profile.html       # 个人中心
+│       ├── activity.html      # 活动页
+│       └── news.html          # 新闻页
+├── run.py                      # 启动脚本
+├── generate_mock_data.py       # 模拟数据生成脚本
+├── requirements.txt            # Python依赖
+├── game_rental.db             # SQLite数据库文件
+└── README.md                   # 项目说明文档
+```
+
+## 功能特性
+
+### 1. 用户管理
+- 用户注册与登录
+- 个人信息管理
+- 钱包管理（充值、提现）
+- 余额校验
+
+### 2. 账号管理
+- 发布账号信息
+- 账号列表展示
+- 高级搜索筛选
+  - 保险箱格数（4/6/9格）
+  - 等级范围
+  - 区服
+  - 刀皮（北极星、黑海、赤霄怜悯、影锋、信条）
+  - 资产范围
+- 账号详情查看
+
+### 3. 订单管理
+- 创建租赁订单
+- 在线支付
+- 订单状态跟踪
+- 订单完成与押金退还
+- 订单金额自动计算
+  - 公式：订单金额 = 纯币资产 × 100 ÷ 比例
+  - 比例：9格=38，6格=40，4格=42
+
+### 4. 资金管理
+- 用户余额管理
+- 充值功能
+- 提现功能
+- 交易记录
+- 管理员抽成（押金的50%）
+
+### 5. 其他功能
+- 出币活动（抽奖）
+- 经济学日报（外链跳转）
+
+## 安装与运行
+
+### 1. 安装依赖
+
+```bash
+pip3 install -r requirements.txt
+```
+
+### 2. 生成模拟数据
+
+```bash
+python3 generate_mock_data.py
+```
+
+这将创建：
+- 1个管理员账户（admin / admin123）
+- 20个普通用户（user001-user020 / 123456）
+- 50个游戏账号
+- 30个订单记录
+
+### 3. 启动应用
+
+```bash
+python3 run.py
+```
+
+应用将在 `http://localhost:5000` 启动。
+
+## 测试账号
+
+### 管理员账号
+- 用户名: `admin`
+- 密码: `admin123`
+
+### 普通用户账号
+- 用户名: `user001` - `user020`
+- 密码: `123456`
+
+## API接口
+
+### 认证接口
+- `POST /api/auth/register` - 用户注册
+- `POST /api/auth/login` - 用户登录
+- `POST /api/auth/logout` - 用户登出
+- `GET /api/auth/current` - 获取当前用户
+
+### 账号接口
+- `GET /api/accounts/` - 获取账号列表（支持筛选）
+- `GET /api/accounts/<id>` - 获取账号详情
+- `POST /api/accounts/` - 发布账号
+- `PUT /api/accounts/<id>` - 更新账号
+- `DELETE /api/accounts/<id>` - 删除账号
+
+### 订单接口
+- `GET /api/orders/` - 获取订单列表
+- `GET /api/orders/<id>` - 获取订单详情
+- `POST /api/orders/` - 创建订单
+- `POST /api/orders/<id>/pay` - 支付订单
+- `POST /api/orders/<id>/complete` - 完成订单
+- `POST /api/orders/<id>/cancel` - 取消订单
+
+### 用户接口
+- `GET /api/users/profile` - 获取个人信息
+- `PUT /api/users/profile` - 更新个人信息
+- `POST /api/users/change-password` - 修改密码
+- `POST /api/users/recharge` - 充值
+- `POST /api/users/withdraw` - 提现
+- `GET /api/users/balance` - 获取余额
+
+## 数据库设计
+
+### 用户表 (users)
+- id: 主键
+- username: 用户名
+- password_hash: 密码哈希
+- email: 邮箱
+- phone: 手机号
+- balance: 余额
+- is_admin: 是否管理员
+- created_at: 创建时间
+- updated_at: 更新时间
+
+### 账号表 (accounts)
+- id: 主键
+- user_id: 用户ID（外键）
+- account_number: 账号编号
+- collection_time: 收号时间
+- login_time: 上号时间
+- common_location: 常用地
+- server_region: 区服
+- login_method: 登录方式
+- face_verification: 人脸认证
+- rank: 段位
+- total_assets: 总资产
+- pure_coin_assets: 纯币资产
+- level: 等级
+- stamina_level: 体力等级
+- safe_box_slots: 保险箱格数
+- aw_bullets: AW子弹
+- knife_skins: 刀皮（JSON）
+- price: 价格
+- deposit: 押金
+- remarks: 备注
+- status: 状态
+- created_at: 创建时间
+- updated_at: 更新时间
+
+### 订单表 (orders)
+- id: 主键
+- order_number: 订单编号
+- renter_id: 租赁方ID（外键）
+- owner_id: 出租方ID（外键）
+- account_id: 账号ID（外键）
+- rental_amount: 租金
+- deposit_amount: 押金
+- total_amount: 总金额
+- status: 状态
+- created_at: 创建时间
+- paid_at: 支付时间
+- completed_at: 完成时间
+- updated_at: 更新时间
+- remarks: 备注
+
+## 业务逻辑
+
+### 订单金额计算
+```python
+ratio_map = {9: 38, 6: 40, 4: 42}
+ratio = ratio_map[safe_box_slots]
+order_amount = pure_coin_assets * 100 / ratio
+```
+
+### 押金处理
+- 租赁时：租赁方支付全额押金
+- 完成时：
+  - 租赁方退还50%押金
+  - 管理员获得50%押金作为平台抽成
+
+### 刀皮约束
+只允许以下5种刀皮：
+- 北极星
+- 黑海
+- 赤霄怜悯
+- 影锋
+- 信条
+
+### 保险箱格数约束
+只允许以下3种格数：
+- 4格
+- 6格
+- 9格
+
+## 注意事项
+
+1. 本系统使用SQLite数据库，适合开发和测试环境
+2. 生产环境建议使用MySQL或PostgreSQL
+3. 密码使用Werkzeug的密码哈希加密
+4. 前端使用原生JavaScript，无需构建工具
+5. 支持多条件组合搜索和筛选
+6. 余额不足时无法下单购买
+
+## 开发者
+
+Manus AI
+
+## 许可证
+
+MIT License
+=======
+# game_rental
+>>>>>>> 4f18836d1f48ac028a20761207621068eeac3259

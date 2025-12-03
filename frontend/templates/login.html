@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 游戏账号租赁平台</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 450px;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .login-subtitle {
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .login-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        
+        .login-footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1 class="login-title">游戏账号租赁平台</h1>
+                <p class="login-subtitle">欢迎回来，请登录您的账号</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">用户名</label>
+                    <input type="text" class="form-control" id="username" required placeholder="请输入用户名">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <input type="password" class="form-control" id="password" required placeholder="请输入密码">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">登录</button>
+            </form>
+            
+            <div class="login-footer">
+                还没有账号？<a href="/register">立即注册</a>
+            </div>
+            
+            <div class="login-footer" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                <p style="font-size: 12px; color: #999;">测试账号：</p>
+                <p style="font-size: 12px; color: #999;">管理员：admin / admin123</p>
+                <p style="font-size: 12px; color: #999;">普通用户：user001-user020 / 123456</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('登录成功！');
+                    window.location.href = '/rental';
+                } else {
+                    alert(data.message || '登录失败');
+                }
+            } catch (error) {
+                alert('登录失败: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

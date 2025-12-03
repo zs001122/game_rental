@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>账号租赁 - 游戏账号租赁平台</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="navbar-brand">游戏账号租赁平台</a>
+            <ul class="navbar-menu">
+                <li><a href="/rental">账号租赁</a></li>
+                <li><a href="/publish">发布账号</a></li>
+                <li><a href="/activity">出币活动</a></li>
+                <li><a href="/news">经济学日报</a></li>
+                <li><a href="/profile">个人中心</a></li>
+            </ul>
+            <div class="navbar-user"></div>
+        </div>
+    </nav>
+    
+    <!-- 主内容 -->
+    <div class="container">
+        <!-- 顶部装饰和搜索区域 -->
+        <div class="rental-header">
+            <div class="header-left">
+                <div class="header-image">🎮</div>
+                <h2 class="header-title">星空商行欢迎你</h2>
+            </div>
+            <div class="header-right">
+                <div class="header-image">✨</div>
+                <button class="btn btn-primary" id="toggleFilterBtn" onclick="toggleFilter()">🔍 搜索</button>
+            </div>
+        </div>
+        
+        <!-- 筛选区域（可隐藏） -->
+        <div class="filter-section" id="filterSection" style="display: none;">
+            <h3 style="margin-bottom: 20px; color: #ffd700;">高级筛选</h3>
+            <div class="filter-row">
+                <div class="form-group">
+                    <label class="form-label">保险箱格数</label>
+                    <select class="form-control" id="filterSafeBox" multiple>
+                        <option value="4">4格</option>
+                        <option value="6">6格</option>
+                        <option value="9">9格</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">最小等级</label>
+                    <input type="number" class="form-control" id="filterMinLevel" placeholder="例如：45">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">最大等级</label>
+                    <input type="number" class="form-control" id="filterMaxLevel" placeholder="例如：100">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">区服</label>
+                    <input type="text" class="form-control" id="filterRegion" placeholder="例如：华东">
+                </div>
+            </div>
+            
+            <div class="filter-row">
+                <div class="form-group">
+                    <label class="form-label">刀皮</label>
+                    <select class="form-control" id="filterKnifeSkins" multiple>
+                        <option value="北极星">北极星</option>
+                        <option value="黑海">黑海</option>
+                        <option value="赤霄怜悯">赤霄怜悯</option>
+                        <option value="影锋">影锋</option>
+                        <option value="信条">信条</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">最小资产</label>
+                    <input type="number" class="form-control" id="filterMinAssets" placeholder="例如：100">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">最大资产</label>
+                    <input type="number" class="form-control" id="filterMaxAssets" placeholder="例如：500">
+                </div>
+            </div>
+            
+            <div style="text-align: right;">
+                <button class="btn btn-secondary" onclick="resetFilters()">重置</button>
+                <button class="btn btn-primary" onclick="loadAccounts()">搜索</button>
+            </div>
+        </div>
+        
+        <!-- 账号列表 -->
+        <div id="accountList" class="account-grid">
+            <div class="loading">加载中...</div>
+        </div>
+    </div>
+    
+    <script src="/static/js/common.js"></script>
+    <script>
+        let currentUser = null;
+        let filterVisible = false;
+        
+        // 切换搜索栏显示/隐藏
+        function toggleFilter() {
+            const filterSection = document.getElementById('filterSection');
+            const toggleBtn = document.getElementById('toggleFilterBtn');
+            filterVisible = !filterVisible;
+            
+            if (filterVisible) {
+                filterSection.style.display = 'block';
+                toggleBtn.textContent = '🔍 隐藏搜索';
+            } else {
+                filterSection.style.display = 'none';
+                toggleBtn.textContent = '🔍 搜索';
+            }
+        }
+        
+        // 页面加载时检查登录状态
+        async function init() {
+            currentUser = await checkLogin();
+            if (currentUser) {
+                loadAccounts();
+            }
+        }
+        
+        // 加载账号列表
+        async function loadAccounts() {
+            const accountList = document.getElementById('accountList');
+            accountList.innerHTML = '<div class="loading">加载中...</div>';
+            
+            try {
+                // 获取筛选条件
+                const params = new URLSearchParams();
+                
+                const safeBoxSelect = document.getElementById('filterSafeBox');
+                const selectedSafeBox = Array.from(safeBoxSelect.selectedOptions).map(opt => opt.value);
+                selectedSafeBox.forEach(val => params.append('safe_box_slots', val));
+                
+                const minLevel = document.getElementById('filterMinLevel').value;
+                if (minLevel) params.append('min_level', minLevel);
+                
+                const maxLevel = document.getElementById('filterMaxLevel').value;
+                if (maxLevel) params.append('max_level', maxLevel);
+                
+                const region = document.getElementById('filterRegion').value;
+                if (region) params.append('server_region', region);
+                
+                const knifeSkinSelect = document.getElementById('filterKnifeSkins');
+                const selectedKnifeSkins = Array.from(knifeSkinSelect.selectedOptions).map(opt => opt.value);
+                selectedKnifeSkins.forEach(val => params.append('knife_skins', val));
+                
+                const minAssets = document.getElementById('filterMinAssets').value;
+                if (minAssets) params.append('min_assets', minAssets);
+                
+                const maxAssets = document.getElementById('filterMaxAssets').value;
+                if (maxAssets) params.append('max_assets', maxAssets);
+                
+                const data = await apiRequest('/accounts?' + params.toString());
+                
+                if (data.accounts.length === 0) {
+                    accountList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>暂无符合条件的账号</p></div>';
+                    return;
+                }
+                
+                accountList.innerHTML = data.accounts.map(account => `
+                    <div class="account-card">
+                        <div class="account-header">
+                            <span class="account-number">${account.account_number}</span>
+                            <span class="account-status ${getStatusClass(account.status)}">${getStatusText(account.status)}</span>
+                        </div>
+                        
+                        <div class="account-info">
+                            <div class="info-item">
+                                <span class="info-label">区服:</span>
+                                <span class="info-value">${account.server_region || '-'}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">等级:</span>
+                                <span class="info-value">${account.level || '-'}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">段位:</span>
+                                <span class="info-value">${account.rank || '-'}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">保险箱:</span>
+                                <span class="info-value">${account.safe_box_slots}格</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">纯币资产:</span>
+                                <span class="info-value">${formatMoney(account.pure_coin_assets)}m</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">总资产:</span>
+                                <span class="info-value">${account.total_assets ? formatMoney(account.total_assets) + 'm' : '-'}</span>
+                            </div>
+                        </div>
+                        
+                        ${account.knife_skins && account.knife_skins.length > 0 ? `
+                            <div class="knife-skins">
+                                <div style="color: #666; font-size: 12px; margin-bottom: 5px;">持有刀皮:</div>
+                                ${account.knife_skins.map(skin => `<span class="knife-tag">${skin}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                        
+                        ${account.remarks ? `<div style="font-size: 12px; color: #666; margin-top: 10px;">备注: ${account.remarks}</div>` : ''}
+                        
+                        <div class="account-footer">
+                            <div class="price-info">
+                                <span class="price-label">租金:</span>
+                                <span class="price-value">¥${formatMoney(account.order_amount)}</span>
+                                <span style="font-size: 12px; color: #999; margin-left: 10px;">押金: ¥${formatMoney(account.deposit)}</span>
+                            </div>
+                            ${account.status === 'available' ? `
+                                <button class="btn btn-primary" onclick="rentAccount(${account.id})">租赁</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                accountList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><p>加载失败: ' + error.message + '</p></div>';
+            }
+        }
+        
+        // 租赁账号
+        async function rentAccount(accountId) {
+            if (!confirm('确认租赁此账号吗？')) {
+                return;
+            }
+            
+            try {
+                const data = await apiRequest('/orders/', {
+                    method: 'POST',
+                    body: JSON.stringify({ account_id: accountId })
+                });
+                
+                if (data.success) {
+                    if (confirm('订单创建成功！是否立即支付？')) {
+                        await payOrder(data.order.id);
+                    } else {
+                        showMessage('订单已创建，请前往个人中心支付', 'success');
+                        loadAccounts();
+                    }
+                }
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        }
+        
+        // 支付订单
+        async function payOrder(orderId) {
+            try {
+                const data = await apiRequest(`/orders/${orderId}/pay`, {
+                    method: 'POST'
+                });
+                
+                if (data.success) {
+                    showMessage('支付成功！', 'success');
+                    await updateNavbar();
+                    loadAccounts();
+                }
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        }
+        
+        // 重置筛选
+        function resetFilters() {
+            document.getElementById('filterSafeBox').selectedIndex = -1;
+            document.getElementById('filterMinLevel').value = '';
+            document.getElementById('filterMaxLevel').value = '';
+            document.getElementById('filterRegion').value = '';
+            document.getElementById('filterKnifeSkins').selectedIndex = -1;
+            document.getElementById('filterMinAssets').value = '';
+            document.getElementById('filterMaxAssets').value = '';
+            loadAccounts();
+        }
+        
+        // 初始化
+        init();
+    </script>
+</body>
+</html>
