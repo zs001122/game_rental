@@ -1,9 +1,3 @@
-# 虚拟环境
-venv/
-env/
-ENV/
-.venv
-
 # Python
 __pycache__/
 *.py[cod]
@@ -26,24 +20,37 @@ wheels/
 .installed.cfg
 *.egg
 
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# Database
+*.db
+game_rental.db
+
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-
-# 数据库
-*.db
-game_rental.db
-
-# OS
 .DS_Store
-Thumbs.db
 
-# 环境变量
+# Environment variables
 .env
 .env.local
+.env.*.local
 
-# GitHub 配置
+# Vercel
+.vercel/
+.output
+
+# Node (if using any Node packages)
+node_modules/
+npm-debug.log
+
+# Secrets and tokens
 .github/config.json
+secrets.json
+config.json

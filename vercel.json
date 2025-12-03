@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "buildCommand": "pip install -r requirements.txt",
+  "env": {
+    "FLASK_ENV": "production",
+    "PYTHON_VERSION": "3.9"
+  },
+  "functions": {
+    "api/index.py": {
+      "runtime": "python3.9",
+      "maxDuration": 60
+    }
+  },
+  "routes": [
+    {
+      "src": "^/static/(.*)$",
+      "dest": "/frontend/static/$1"
+    },
+    {
+      "src": "^/(.*?)/?$",
+      "dest": "/api/index.py"
+    }
+  ]
+}
