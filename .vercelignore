@@ -1,0 +1,13 @@
+game_rental.db
+*.pyc
+__pycache__
+.git
+.gitignore
+README.md
+*.md
+.env
+.env.local
+venv/
+env/
+.DS_Store
+node_modules/
