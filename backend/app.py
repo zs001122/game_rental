@@ -40,6 +40,14 @@ def create_app():
     app.register_blueprint(order_bp, url_prefix='/api/orders')
     app.register_blueprint(user_bp, url_prefix='/api/users')
     
+    # 静态文件路由 - 在Vercel上确保静态文件被提供
+    from flask import send_from_directory
+    
+    @app.route('/static/<path:filename>')
+    def serve_static(filename):
+        """提供静态文件"""
+        return send_from_directory(static_path, filename)
+    
     # 前端路由
     @app.route('/')
     def index():
