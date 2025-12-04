@@ -94,7 +94,7 @@ def create_account():
     data = request.get_json()
     
     # 验证必填字段（account_number 由系统生成）
-    required_fields = ['pure_coin_assets', 'safe_box_slots', 'price', 'deposit', 'server_region', 'total_assets']
+    required_fields = ['pure_coin_assets', 'safe_box_slots', 'price', 'server_region', 'total_assets']
     for field in required_fields:
         if field not in data:
             return jsonify({'success': False, 'message': f'缺少必填字段: {field}'}), 400
@@ -124,7 +124,22 @@ def create_account():
     from datetime import datetime
     account_number = f'ACC{datetime.now().strftime("%Y%m%d%H%M%S")}{uuid.uuid4().hex[:6].upper()}'
     
-    # 创建账号
+    # 创建账号（临时）以计算押金
+    temp_account = Account(
+        user_id=user_id,
+        account_number=account_number,
+        pure_coin_assets=data['pure_coin_assets'],
+        safe_box_slots=data['safe_box_slots'],
+        price=data['price'],
+        deposit=0,  # 先设为0，下面会覆盖
+        total_assets=data.get('total_assets')
+    )
+    
+    # 计算押金（租金的30%）
+    rental_amount = temp_account.calculate_order_amount()
+    calculated_deposit = round(rental_amount * 0.3, 2)
+    
+    # 创建最终账号
     account = Account(
         user_id=user_id,
         account_number=account_number,
@@ -143,7 +158,7 @@ def create_account():
         aw_bullets=data.get('aw_bullets'),
         knife_skins=knife_skins,
         price=data['price'],
-        deposit=data['deposit'],
+        deposit=calculated_deposit,
         remarks=data.get('remarks')
     )
     

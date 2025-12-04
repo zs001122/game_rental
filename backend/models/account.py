@@ -52,6 +52,11 @@ class Account(db.Model):
         ratio = ratio_map.get(self.safe_box_slots, 40)
         return float(self.pure_coin_assets) * 100 / ratio
     
+    def calculate_deposit(self):
+        """计算押金：租金的30%"""
+        rental_amount = self.calculate_order_amount()
+        return round(rental_amount * 0.3, 2)
+    
     def to_dict(self):
         """转换为字典"""
         return {

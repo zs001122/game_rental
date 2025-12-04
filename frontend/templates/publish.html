@@ -219,8 +219,8 @@
             // 租金 = 纯币 × 100 ÷ 比例
             const rental = pureCoin * 100 / ratio;
             
-            // 押金 = 租金 × 30
-            const deposit = rental * 30;
+            // 押金 = 租金 × 0.3 (30%)
+            const deposit = rental * 0.3;
             
             document.getElementById('price').value = rental.toFixed(2);
             document.getElementById('deposit').value = deposit.toFixed(2);
@@ -265,7 +265,6 @@
                 aw_bullets: parseInt(document.getElementById('awBullets').value) || null,
                 knife_skins: knifeSkins,
                 price: parseFloat(document.getElementById('price').value),
-                deposit: parseFloat(document.getElementById('deposit').value),
                 remarks: document.getElementById('remarks').value || null
             };
             
