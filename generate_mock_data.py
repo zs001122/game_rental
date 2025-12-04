@@ -138,7 +138,7 @@ def generate_orders(users, accounts, count=30):
         total_amount = rental_amount + deposit_amount
         
         # 随机订单状态
-        status = random.choice(['pending', 'paid', 'completed'])
+        status = random.choice(['pending', 'renting', 'completed'])
         
         # 创建时间（最近30天内）
         created_at = datetime.now() - timedelta(days=random.randint(0, 30))
@@ -156,10 +156,10 @@ def generate_orders(users, accounts, count=30):
         )
         
         # 根据状态设置时间
-        if status in ['paid', 'completed']:
+        if status in ['renting', 'completed']:
             order.paid_at = created_at + timedelta(minutes=random.randint(1, 60))
             # 更新账号状态
-            if status == 'paid':
+            if status == 'renting':
                 account.status = 'rented'
         
         if status == 'completed':

@@ -247,16 +247,22 @@
                 return;
             }
             
+            // 检查两种抽奖方式
+            const hasDailyLottery = currentUser.has_daily_lottery || false;
             const chances = currentUser.lottery_chances || 0;
             
-            if (chances < 1) {
-                lotteryInfo.innerHTML = '🌟 您没有免费抽奖次数 | 完成租赁订单可获得免费次数💰';
-                btn.innerHTML = '抽奖需<br>¥1元';
-                btn.disabled = false;
-            } else {
-                lotteryInfo.innerHTML = '🌟 您有 <strong>' + chances + '</strong> 次免费抽奖机会！';
+            if (hasDailyLottery) {
+                lotteryInfo.innerHTML = '🌟 您有今天的免费抽奖机会！💰';
                 btn.innerHTML = '开始<br>抽奖';
                 btn.disabled = false;
+            } else if (chances > 0) {
+                lotteryInfo.innerHTML = '🌟 您有 <strong>' + chances + '</strong> 次额外抽奖机会（完成订单获得）';
+                btn.innerHTML = '开始<br>抽奖';
+                btn.disabled = false;
+            } else {
+                lotteryInfo.innerHTML = '🌟 您没有抽奖机会 | 每天一次免费抽奖或完成租赁订单可获得💰';
+                btn.innerHTML = '开始<br>抽奖';
+                btn.disabled = true;
             }
         }
         
@@ -272,14 +278,13 @@
             const result = document.getElementById('result');
             const wheel = document.getElementById('lotteryWheel');
             
-            // 检查是否需要扣费
+            // 检查是否有抽奖机会（每日免费或订单获得）
+            const hasDailyLottery = currentUser.has_daily_lottery || false;
             const chances = currentUser.lottery_chances || 0;
-            if (chances < 1) {
-                // 检查余额
-                if (currentUser.balance < 1) {
-                    showMessage('余额不足，无法抽奖，请先充值', 'error');
-                    return;
-                }
+            
+            if (!hasDailyLottery && chances < 1) {
+                showMessage('您没有抽奖机会，请明天再来或完成租赁订单获得', 'error');
+                return;
             }
             
             isSpinning = true;
@@ -320,62 +325,41 @@
                     result.innerHTML = `<div class="result-success">😂 非常遗憾，下次有你！</div>`;
                 }
                 
-                // 处理奖励
-                if (prize.amount > 0) {
-                    try {
-                        const chancesBefore = currentUser.lottery_chances || 0;
-                        
-                        // 检查是否需要扣费（有免费次数则免费，否则扣¥1）
-                        if (chancesBefore < 1) {
-                            // 从余额扣除1元
-                            await apiRequest('/users/withdraw', {
-                                method: 'POST',
-                                body: JSON.stringify({ amount: 1 })
-                            });
-                        } else {
-                            // 扣除免费抽奖次数
-                            await apiRequest('/users/lottery-chance', {
-                                method: 'POST'
-                            });
-                        }
-                        
-                        // 发送奖励
+                // 处理奖励和扣除抽奖机会
+                try {
+                    const isUsingDaily = currentUser.has_daily_lottery || false;
+                    
+                    // 处理奖励（如果中奖）
+                    if (prize.amount > 0) {
                         await apiRequest('/users/recharge', {
                             method: 'POST',
                             body: JSON.stringify({ amount: prize.amount })
                         });
-                        
-                        if (chancesBefore >= 1) {
-                            showMessage(`恭喜您获得¥${prize.amount}，已自动充值到账户💰`, 'success');
-                        } else {
-                            showMessage(`恭喜您获得¥${prize.amount}，已扣除抽奖费用¥1元💰`, 'success');
-                        }
-                        
-                        // 重新获取用户信息更新抽奖次数
-                        currentUser = await getCurrentUser();
-                        updateLotteryInfo();
-                        await updateNavbar();
-                    } catch (error) {
-                        showMessage('奖励发放失败: ' + error.message, 'error');
+                        showMessage(`恭喜您获得¥${prize.amount}，已自动充值到账户💰`, 'success');
                     }
-                } else {
-                    // 未中奖时也减少免费次数
-                    try {
-                        const chancesBefore = currentUser.lottery_chances || 0;
-                        
-                        if (chancesBefore >= 1) {
-                            // 扣除免费抽奖次数
-                            await apiRequest('/users/lottery-chance', {
-                                method: 'POST'
-                            });
-                            // 重新获取用户信息
-                            currentUser = await getCurrentUser();
-                            updateLotteryInfo();
-                        }
-                    } catch (error) {
-                        // 如果扣除失败也不影响用户体验
-                        console.error('扣除免费次数失败:', error);
+                    
+                    // 扣除抽奖机会（先用每日免费，然后用订单获得的）
+                    if (isUsingDaily) {
+                        // 使用每日免费抽奖机会
+                        await apiRequest('/users/use-daily-lottery', {
+                            method: 'POST'
+                        });
+                    } else if (chances > 0) {
+                        // 使用订单获得的抽奖机会
+                        await apiRequest('/users/lottery-chance', {
+                            method: 'POST'
+                        });
                     }
+                    
+                    // 重新获取用户信息更新抽奖次数
+                    currentUser = await getCurrentUser();
+                    updateLotteryInfo();
+                    await updateNavbar();
+                } catch (error) {
+                    showMessage('处理失败: ' + error.message, 'error');
+                }
+                
+                if (prize.amount === 0) {
                     showMessage('下次继续加油！', 'info');
                 }
                 

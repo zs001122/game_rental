@@ -164,7 +164,7 @@ def get_balance():
 
 @user_bp.route('/lottery-chance', methods=['POST'])
 def use_lottery_chance():
-    """使用免費抽奖次数"""
+    """使用订单获得的免費抽奖次数"""
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'success': False, 'message': '请先登录'}), 401
@@ -182,8 +182,35 @@ def use_lottery_chance():
         db.session.commit()
         return jsonify({
             'success': True, 
-            'message': '已使用4次免費抽奖次数',
+            'message': '已使用1次抽奖次数',
             'lottery_chances': user.lottery_chances
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'操作失败: {str(e)}'}), 500
+
+@user_bp.route('/use-daily-lottery', methods=['POST'])
+def use_daily_lottery():
+    """使用每日免费抽奖机会"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'message': '请先登录'}), 401
+    
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'success': False, 'message': '用户不存在'}), 404
+    
+    # 检查是否有今日免费抽奖机会
+    if not user.has_daily_lottery():
+        return jsonify({'success': False, 'message': '您今天已经使用过免费抽奖机会，请明天再来'}), 400
+    
+    try:
+        user.use_daily_lottery()
+        db.session.commit()
+        return jsonify({
+            'success': True, 
+            'message': '已使用今日免费抽奖机会',
+            'has_daily_lottery': user.has_daily_lottery()
         }), 200
     except Exception as e:
         db.session.rollback()
