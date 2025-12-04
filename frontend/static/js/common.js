@@ -5,19 +5,44 @@ const API_BASE = '/api';
 
 // 显示消息提示
 function showMessage(message, type = 'info') {
+    // 创建通知容器（如果不存在）
+    let notifyContainer = document.getElementById('notify-container');
+    if (!notifyContainer) {
+        notifyContainer = document.createElement('div');
+        notifyContainer.id = 'notify-container';
+        notifyContainer.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+            pointer-events: none;
+        `;
+        document.body.appendChild(notifyContainer);
+    }
+    
+    // 创建通知框
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type}`;
     alertDiv.textContent = message;
+    alertDiv.style.cssText = `
+        position: relative;
+        margin-bottom: 10px;
+        padding: 15px 20px;
+        border-radius: 5px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        pointer-events: auto;
+        animation: slideIn 0.3s ease-out;
+    `;
     
-    const container = document.querySelector('.container');
-    if (container) {
-        container.insertBefore(alertDiv, container.firstChild);
-        
-        // 3秒后自动移除
+    notifyContainer.appendChild(alertDiv);
+    
+    // 3秒后自动移除
+    setTimeout(() => {
+        alertDiv.style.animation = 'slideOut 0.3s ease-out';
         setTimeout(() => {
             alertDiv.remove();
-        }, 3000);
-    }
+        }, 300);
+    }, 3000);
 }
 
 // 发送API请求
@@ -92,8 +117,8 @@ function getStatusText(status) {
         'rented': '已租出',
         'unavailable': '不可用',
         'pending': '待支付',
-        'paid': '已支付',
-        'completed': '已完成',
+        'renting': '正在租赁',
+        'completed': '已组赁',
         'cancelled': '已取消'
     };
     return statusMap[status] || status;

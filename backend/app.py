@@ -84,11 +84,6 @@ def create_app():
         """出币活动页面"""
         return render_template('activity.html')
     
-    @app.route('/news')
-    def news_page():
-        """经济学日报页面"""
-        return render_template('news.html')
-    
     @app.route('/admin')
     def admin_page():
         """管理员后台页面"""

@@ -161,3 +161,30 @@ def get_balance():
         return jsonify({'success': False, 'message': '用户不存在'}), 404
     
     return jsonify({'success': True, 'balance': float(user.balance)}), 200
+
+@user_bp.route('/lottery-chance', methods=['POST'])
+def use_lottery_chance():
+    """使用免費抽奖次数"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'message': '请先登录'}), 401
+    
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'success': False, 'message': '用户不存在'}), 404
+    
+    # 检查是否有免費次数
+    if user.lottery_chances < 1:
+        return jsonify({'success': False, 'message': '你不拥有免費抽奖次数'}), 400
+    
+    try:
+        user.lottery_chances -= 1
+        db.session.commit()
+        return jsonify({
+            'success': True, 
+            'message': '已使用4次免費抽奖次数',
+            'lottery_chances': user.lottery_chances
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'操作失败: {str(e)}'}), 500

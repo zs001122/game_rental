@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify, session
 from backend.models import db, Order, Account, User
 from datetime import datetime
 import uuid
+from decimal import Decimal
 
 order_bp = Blueprint('order', __name__)
 
@@ -140,6 +141,10 @@ def create_order():
     
     try:
         db.session.add(order)
+        
+        # 订单创建时立即标记账号为已租出（待支付）
+        account.status = 'rented'
+        
         db.session.commit()
         return jsonify({'success': True, 'message': '订单创建成功', 'order': order.to_dict()}), 201
     except Exception as e:
@@ -179,24 +184,26 @@ def pay_order(order_id):
     
     try:
         # 扣除租赁方余额
-        user.balance -= order.total_amount
+        user.balance -= Decimal(str(order.total_amount))
         
-        # 出租方获得租金
-        owner.balance += order.rental_amount
+        # 租金给出租方
+        owner.balance += Decimal(str(order.rental_amount))
         
-        # 管理员获得押金的一半
+        # 定金50%给下单方(租赁方)
+        user.balance += Decimal(str(order.deposit_amount)) / 2
+        
+        # 定金50%给管理员
         if admin:
-            admin.balance += order.deposit_amount / 2
+            admin.balance += Decimal(str(order.deposit_amount)) / 2
         
-        # 更新订单状态
-        order.status = 'paid'
+        # 更新订单状态为'正在租赁'
+        order.status = 'renting'
         order.paid_at = datetime.now()
         
-        # 更新账号状态
-        account.status = 'rented'
+        # 账号状态已在订单创建时设置为'rented'，这里不需要再改
         
         db.session.commit()
-        return jsonify({'success': True, 'message': '支付成功', 'order': order.to_dict()}), 200
+        return jsonify({'success': True, 'message': '支付成功，订单已进入正在租赁状态', 'order': order.to_dict()}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'支付失败: {str(e)}'}), 500
@@ -216,27 +223,29 @@ def complete_order(order_id):
     if order.renter_id != user_id and order.owner_id != user_id and not session.get('is_admin'):
         return jsonify({'success': False, 'message': '无权限操作此订单'}), 403
     
-    # 检查订单状态
-    if order.status != 'paid':
-        return jsonify({'success': False, 'message': '订单状态不正确'}), 400
+    # 检查订单状态 - 只有'renting'状态才能完成
+    if order.status != 'renting':
+        return jsonify({'success': False, 'message': '订单状态不正确，只有正在租赁的订单才能确认为已组赁'}), 400
     
-    # 获取租赁方
+    # 获取租赁方和账号
     renter = User.query.get(order.renter_id)
     account = Account.query.get(order.account_id)
     
     try:
-        # 退还押金的一半给租赁方
-        renter.balance += order.deposit_amount / 2
+        # 订单完成时，更新状态并增加租赁方的抽奖次数
         
-        # 更新订单状态
+        # 更新订单状态为'已组赁'
         order.status = 'completed'
         order.completed_at = datetime.now()
         
-        # 更新账号状态
+        # 更新账号状态回到可租赁
         account.status = 'available'
         
+        # 增加租赁方的免费抽奖次数
+        renter.lottery_chances += 1
+        
         db.session.commit()
-        return jsonify({'success': True, 'message': '订单已完成，押金已退还一半', 'order': order.to_dict()}), 200
+        return jsonify({'success': True, 'message': '订单已确认为已组赁，资金分配完成，已获得1次免费抽奖机会', 'order': order.to_dict()}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'操作失败: {str(e)}'}), 500
@@ -261,7 +270,15 @@ def cancel_order(order_id):
         return jsonify({'success': False, 'message': '只能取消待支付的订单'}), 400
     
     try:
+        # 获取账号，取消订单时恢复账号为可租赁状态
+        account = Account.query.get(order.account_id)
+        
         order.status = 'cancelled'
+        
+        # 恢复账号为可租赁
+        if account:
+            account.status = 'available'
+        
         db.session.commit()
         return jsonify({'success': True, 'message': '订单已取消', 'order': order.to_dict()}), 200
     except Exception as e:

@@ -77,13 +77,13 @@ def generate_accounts(users, count=50):
         # 随机等级
         level = random.randint(20, 100)
         
-        # 计算价格（基于纯币资产）
+        # 计算租金（基于纯币资产：纯币资产 × 100 ÷ 比例）
         ratio_map = {9: 38, 6: 40, 4: 42}
         ratio = ratio_map[safe_box_slots]
-        price = round(pure_coin_assets * 100 / ratio, 2)
+        rental_price = round(pure_coin_assets * 100 / ratio, 2)
         
-        # 押金（价格的50%-100%）
-        deposit = round(price * random.uniform(0.5, 1.0), 2)
+        # 押金（与租金相同或略高）
+        deposit = round(rental_price * 30, 2)
         
         account = Account(
             user_id=owner.id,
@@ -102,7 +102,7 @@ def generate_accounts(users, count=50):
             safe_box_slots=safe_box_slots,
             aw_bullets=random.randint(0, 1000),
             knife_skins=knife_skins,
-            price=price,
+            price=rental_price,
             deposit=deposit,
             remarks=f'这是一个测试账号，编号{i}',
             status='available'

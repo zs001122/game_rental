@@ -15,7 +15,6 @@
                 <li><a href="/rental">账号租赁</a></li>
                 <li><a href="/publish">发布账号</a></li>
                 <li><a href="/activity">出币活动</a></li>
-                <li><a href="/news">经济学日报</a></li>
                 <li><a href="/profile">个人中心</a></li>
             </ul>
             <div class="navbar-user"></div>
@@ -24,6 +23,20 @@
     
     <!-- 主内容 -->
     <div class="container">
+        <!-- 星空商城横幅 -->
+        <div class="starry-mall-banner">
+            <div class="banner-bg-image"></div>
+            <div class="banner-content">
+                <div class="banner-left">
+                    <div class="banner-icon">🌌</div>
+                    <div class="banner-title">
+                        <div>星空</div>
+                        <div>商域</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- 顶部装饰和搜索区域 -->
         <div class="rental-header">
             <div class="header-left">
@@ -201,14 +214,16 @@
                             </div>
                         </div>
                         
-                        ${account.knife_skins && account.knife_skins.length > 0 ? `
-                            <div class="knife-skins">
+                        <div class="knife-skins" style="min-height: 60px; margin: 10px 0;">
+                            ${account.knife_skins && account.knife_skins.length > 0 ? `
                                 <div style="color: #666; font-size: 12px; margin-bottom: 5px;">持有刀皮:</div>
                                 ${account.knife_skins.map(skin => `<span class="knife-tag">${skin}</span>`).join('')}
-                            </div>
-                        ` : ''}
+                            ` : ''}
+                        </div>
                         
-                        ${account.remarks ? `<div style="font-size: 12px; color: #666; margin-top: 10px;">备注: ${account.remarks}</div>` : ''}
+                        <div style="font-size: 12px; color: #666; margin-top: 5px; margin-bottom: 15px; min-height: 36px; line-height: 18px;">
+                            ${account.remarks ? `备注: ${account.remarks}` : ''}
+                        </div>
                         
                         <div class="account-footer">
                             <div class="price-info">

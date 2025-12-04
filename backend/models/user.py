@@ -17,6 +17,7 @@ class User(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=True)
     phone = db.Column(db.String(20), unique=True, nullable=True)
     balance = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)  # 账户余额
+    lottery_chances = db.Column(db.Integer, default=0, nullable=False)  # 免費抽奖次数
     is_admin = db.Column(db.Boolean, default=False, nullable=False)  # 是否为管理员
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
@@ -42,6 +43,7 @@ class User(db.Model):
             'email': self.email,
             'phone': self.phone,
             'balance': float(self.balance),
+            'lottery_chances': self.lottery_chances,
             'is_admin': self.is_admin,
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
             'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S')

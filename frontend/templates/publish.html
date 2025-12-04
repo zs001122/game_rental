@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>发布账号 - 游戏账号租赁平台</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .region-btn {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .region-btn.active {
+            background: linear-gradient(135deg, #1e90ff 0%, #00bfff 100%);
+            color: white;
+            border-color: #1e90ff;
+        }
+    </style>
 </head>
 <body>
     <!-- 导航栏 -->
@@ -15,7 +31,6 @@
                 <li><a href="/rental">账号租赁</a></li>
                 <li><a href="/publish">发布账号</a></li>
                 <li><a href="/activity">出币活动</a></li>
-                <li><a href="/news">经济学日报</a></li>
                 <li><a href="/profile">个人中心</a></li>
             </ul>
             <div class="navbar-user"></div>
@@ -28,10 +43,7 @@
             <h2 class="card-title">发布账号</h2>
             
             <form id="publishForm">
-                <div class="form-group">
-                    <label class="form-label">账号编号 *</label>
-                    <input type="text" class="form-control" id="accountNumber" required placeholder="请输入账号编号">
-                </div>
+                <!-- 账号编号由系统自动生成，不需要手动填写 -->
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div class="form-group">
@@ -52,8 +64,12 @@
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">区服</label>
-                        <input type="text" class="form-control" id="serverRegion" placeholder="例如：华东一区">
+                        <label class="form-label">区服 *</label>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="button" class="region-btn" id="qqBtn" onclick="selectRegion('qq')" style="flex: 1;">QQ</button>
+                            <button type="button" class="region-btn" id="wechatBtn" onclick="selectRegion('wechat')" style="flex: 1;">微信</button>
+                        </div>
+                        <input type="hidden" id="serverRegion">
                     </div>
                 </div>
                 
@@ -92,13 +108,14 @@
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div class="form-group">
-                        <label class="form-label">总资产(m)</label>
-                        <input type="number" step="0.01" class="form-control" id="totalAssets" placeholder="例如：200.50">
+                        <label class="form-label">总资产(m) *</label>
+                        <input type="number" step="0.01" class="form-control" id="totalAssets" required placeholder="例如：200.50">
+                        <small style="color: #999;">必须大于纯币资产</small>
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">纯币资产(m) *</label>
-                        <input type="number" step="0.01" class="form-control" id="pureCoinAssets" required placeholder="例如：150.00">
+                        <input type="number" step="0.01" class="form-control" id="pureCoinAssets" required placeholder="例如：150.00" onchange="calculatePrice()">
                     </div>
                 </div>
                 
@@ -110,11 +127,11 @@
                     
                     <div class="form-group">
                         <label class="form-label">保险箱格数 *</label>
-                        <select class="form-control" id="safeBoxSlots" required>
+                        <select class="form-control" id="safeBoxSlots" required onchange="calculatePrice()">
                             <option value="">请选择</option>
-                            <option value="4">4格</option>
-                            <option value="6">6格</option>
-                            <option value="9">9格</option>
+                            <option value="4">4格 (比例42)</option>
+                            <option value="6">6格 (比例40)</option>
+                            <option value="9">9格 (比例38)</option>
                         </select>
                     </div>
                 </div>
@@ -138,13 +155,13 @@
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div class="form-group">
-                        <label class="form-label">价格 *</label>
-                        <input type="number" step="0.01" class="form-control" id="price" required placeholder="租金价格">
+                        <label class="form-label">租金 (自动计算)</label>
+                        <input type="number" step="0.01" class="form-control" id="price" readonly placeholder="纯币 × 100 ÷ 比例">
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">押金 *</label>
-                        <input type="number" step="0.01" class="form-control" id="deposit" required placeholder="押金金额">
+                        <label class="form-label">押金 (自动计算)</label>
+                        <input type="number" step="0.01" class="form-control" id="deposit" readonly placeholder="租金 × 30">
                     </div>
                 </div>
                 
@@ -163,26 +180,84 @@
     
     <script src="/static/js/common.js"></script>
     <script>
+        let selectedRegion = null;
+        
         // 检查登录状态
         checkLogin();
         
+        // 区服选择
+        function selectRegion(region) {
+            selectedRegion = region;
+            document.getElementById('serverRegion').value = region === 'qq' ? 'QQ' : '微信';
+            
+            // 更新按钮样式
+            document.getElementById('qqBtn').classList.remove('active');
+            document.getElementById('wechatBtn').classList.remove('active');
+            
+            if (region === 'qq') {
+                document.getElementById('qqBtn').classList.add('active');
+            } else {
+                document.getElementById('wechatBtn').classList.add('active');
+            }
+        }
+        
+        // 计算租金和押金
+        function calculatePrice() {
+            const pureCoin = parseFloat(document.getElementById('pureCoinAssets').value) || 0;
+            const safeBoxSlots = parseInt(document.getElementById('safeBoxSlots').value) || 0;
+            
+            if (pureCoin <= 0 || safeBoxSlots === 0) {
+                document.getElementById('price').value = '';
+                document.getElementById('deposit').value = '';
+                return;
+            }
+            
+            // 计算比例
+            const ratioMap = { 4: 42, 6: 40, 9: 38 };
+            const ratio = ratioMap[safeBoxSlots] || 40;
+            
+            // 租金 = 纯币 × 100 ÷ 比例
+            const rental = pureCoin * 100 / ratio;
+            
+            // 押金 = 租金 × 30
+            const deposit = rental * 30;
+            
+            document.getElementById('price').value = rental.toFixed(2);
+            document.getElementById('deposit').value = deposit.toFixed(2);
+        }
+        
         document.getElementById('publishForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // 验证区服选择
+            if (!selectedRegion) {
+                showMessage('请选择区服（QQ或微信）', 'error');
+                return;
+            }
+            
+            // 验证总资产 > 纯币资产
+            const totalAssets = parseFloat(document.getElementById('totalAssets').value);
+            const pureCoin = parseFloat(document.getElementById('pureCoinAssets').value);
+            
+            if (totalAssets <= pureCoin) {
+                showMessage('总资产必须大于纯币资产', 'error');
+                return;
+            }
             
             // 获取刀皮选择
             const knifeSkinSelect = document.getElementById('knifeSkins');
             const knifeSkins = Array.from(knifeSkinSelect.selectedOptions).map(opt => opt.value);
             
             const formData = {
-                account_number: document.getElementById('accountNumber').value,
+                // account_number 由后端自动生成，不需要前端提供
                 collection_time: document.getElementById('collectionTime').value || null,
                 login_time: document.getElementById('loginTime').value || null,
                 common_location: document.getElementById('commonLocation').value || null,
-                server_region: document.getElementById('serverRegion').value || null,
+                server_region: document.getElementById('serverRegion').value,
                 login_method: document.getElementById('loginMethod').value || null,
                 face_verification: document.getElementById('faceVerification').value || null,
                 rank: document.getElementById('rank').value || null,
-                total_assets: parseFloat(document.getElementById('totalAssets').value) || null,
+                total_assets: parseFloat(document.getElementById('totalAssets').value),
                 pure_coin_assets: parseFloat(document.getElementById('pureCoinAssets').value),
                 level: parseInt(document.getElementById('level').value) || null,
                 stamina_level: parseInt(document.getElementById('staminaLevel').value) || null,
@@ -201,11 +276,15 @@
                 });
                 
                 if (data.success) {
-                    alert('发布成功！');
-                    window.location.href = '/profile';
+                    showMessage('发布成功！', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/profile';
+                    }, 1500);
+                } else {
+                    showMessage(data.message || '发布失败', 'error');
                 }
             } catch (error) {
-                alert('发布失败: ' + error.message);
+                showMessage('发布失败: ' + error.message, 'error');
             }
         });
     </script>

@@ -23,7 +23,7 @@ class Order(db.Model):
     
     # 订单状态
     status = db.Column(db.String(20), default='pending', nullable=False)  
-    # pending: 待支付, paid: 已支付, completed: 已完成, cancelled: 已取消
+    # pending: 待支付, renting: 正在租赁(已支付), completed: 已组赁(已完成), cancelled: 已取消
     
     # 时间信息
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)

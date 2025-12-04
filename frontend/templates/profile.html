@@ -15,7 +15,6 @@
                 <li><a href="/rental">账号租赁</a></li>
                 <li><a href="/publish">发布账号</a></li>
                 <li><a href="/activity">出币活动</a></li>
-                <li><a href="/news">经济学日报</a></li>
                 <li><a href="/profile">个人中心</a></li>
             </ul>
             <div class="navbar-user"></div>
@@ -223,13 +222,17 @@
                                     <td>¥${formatMoney(order.rental_amount)}</td>
                                     <td>¥${formatMoney(order.deposit_amount)}</td>
                                     <td>¥${formatMoney(order.total_amount)}</td>
-                                    <td>${getStatusText(order.status)}</td>
+                                    <td><strong>${getStatusText(order.status)}</strong></td>
                                     <td>${formatDate(order.created_at)}</td>
                                     <td>
                                         ${order.status === 'pending' && order.renter_id === currentUser.id ? 
                                             `<button class="btn btn-success" style="padding: 5px 10px; font-size: 12px;" onclick="payOrder(${order.id})">支付</button>` : ''}
-                                        ${order.status === 'paid' ? 
-                                            `<button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;" onclick="completeOrder(${order.id})">完成</button>` : ''}
+                                        ${order.status === 'renting' && order.renter_id === currentUser.id ? 
+                                            `<button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;" onclick="completeOrder(${order.id})">确认已组赁</button>` : ''}
+                                        ${order.status === 'renting' && order.owner_id === currentUser.id ? 
+                                            `<button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;" disabled>等待确认</button>` : ''}
+                                        ${order.status === 'completed' ? 
+                                            `<button class="btn btn-success" style="padding: 5px 10px; font-size: 12px;" disabled>已完成</button>` : ''}
                                     </td>
                                 </tr>
                             `).join('')}
@@ -335,7 +338,13 @@
         async function doWithdraw() {
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             if (!amount || amount <= 0) {
-                alert('请输入正确的提现金额');
+                showMessage('请输入正确的提现金额', 'error');
+                return;
+            }
+            
+            // 验证提现金额不超过当前余额
+            if (amount > currentUser.balance) {
+                showMessage(`提现金额不能超过余额(¥${formatMoney(currentUser.balance)})`, 'error');
                 return;
             }
             
@@ -344,13 +353,13 @@
                     method: 'POST',
                     body: JSON.stringify({ amount })
                 });
-                showMessage('提现申请已提交', 'success');
+                showMessage('提现成功', 'success');
                 hideWithdrawDialog();
                 await updateNavbar();
                 currentUser = await getCurrentUser();
                 loadUserInfo();
             } catch (error) {
-                showMessage(error.message, 'error');
+                showMessage('提现失败: ' + error.message, 'error');
             }
         }
         

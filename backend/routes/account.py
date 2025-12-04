@@ -93,11 +93,18 @@ def create_account():
     
     data = request.get_json()
     
-    # 验证必填字段
-    required_fields = ['account_number', 'pure_coin_assets', 'safe_box_slots', 'price', 'deposit']
+    # 验证必填字段（account_number 由系统生成）
+    required_fields = ['pure_coin_assets', 'safe_box_slots', 'price', 'deposit', 'server_region', 'total_assets']
     for field in required_fields:
         if field not in data:
             return jsonify({'success': False, 'message': f'缺少必填字段: {field}'}), 400
+    
+    # 验证总资产 > 纯币资产
+    total_assets = float(data.get('total_assets', 0))
+    pure_coin = float(data.get('pure_coin_assets', 0))
+    
+    if total_assets <= pure_coin:
+        return jsonify({'success': False, 'message': '总资产必须大于纯币资产'}), 400
     
     # 验证保险箱格数
     if data['safe_box_slots'] not in [4, 6, 9]:
@@ -112,14 +119,15 @@ def create_account():
             if skin not in ALLOWED_KNIFE_SKINS:
                 return jsonify({'success': False, 'message': f'不允许的刀皮: {skin}'}), 400
     
-    # 检查账号编号是否已存在
-    if Account.query.filter_by(account_number=data['account_number']).first():
-        return jsonify({'success': False, 'message': '账号编号已存在'}), 400
+    # 生成唯一的账号编号
+    import uuid
+    from datetime import datetime
+    account_number = f'ACC{datetime.now().strftime("%Y%m%d%H%M%S")}{uuid.uuid4().hex[:6].upper()}'
     
     # 创建账号
     account = Account(
         user_id=user_id,
-        account_number=data['account_number'],
+        account_number=account_number,
         collection_time=data.get('collection_time'),
         login_time=data.get('login_time'),
         common_location=data.get('common_location'),
